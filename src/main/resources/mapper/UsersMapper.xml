@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--mapper标签的name代表命名空间,使用命名空间来区分不同的mapper文件
+目前关于namespace可以随便写,以后使用mapper代理，这会起到关键作用-->
+<mapper namespace="com.hwua.ssm.dao.UserMapper">
+    <!--
+    id属性是语句的唯一标识
+    resyltType属性标记返回结果中单条结果的类型
+    -->
+   <select id="queryUser" parameterType="map" resultType="user">
+       SELECT  *FROM user WHERE  1=1
+       <if test="userName!= null">
+           AND userName LIKE CONCAT('%',#{userName},'%')
+    </if>
+       <if test="realName!= null">
+           AND realName LIKE CONCAT('%',#{realName},'%')
+       </if>
+        <if test="valid!= null">
+            AND valid = #{valid}
+        </if>
+        <if test="rows!= null &amp;&amp; start != null">
+            LIMIT #{start} ,#{rows}
+        </if>
+   </select>
+    <select id="queryUserCount" parameterType="map" resultType="int">
+        SELECT count(dbid)  FROM user WHERE  1=1
+        <if test="userName!= null">
+            AND userName LIKE CONCAT('%',#{userName},'%')
+        </if>
+        <if test="realName!= null">
+            AND realName LIKE CONCAT('%',#{realName},'%')
+        </if>
+        <if test="valid!= null">
+            AND valid = #{valid}
+        </if>
+    </select>
+    <delete id="deleteByUserId" parameterType="int">
+        DELETE FROM user_role WHERE userId=#{userId}
+    </delete>
+    <insert id="insertRole" parameterType="list">
+        INSERT INTO user_role(roleId, userId) VALUES
+        <foreach collection="list" item="row" separator=",">
+            (#{row.roleId},#{row.userId})
+        </foreach>
+    </insert>
+    <select id="login" parameterType="map" resultType="user">
+        SELECT *FROM user WHERE userName=#{userName} AND password=#{password}
+    </select>
+</mapper>

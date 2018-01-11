@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--mapper标签的name代表命名空间,使用命名空间来区分不同的mapper文件
+目前关于namespace可以随便写,以后使用mapper代理，这会起到关键作用-->
+<mapper namespace="com.hwua.ssm.dao.AuthMapper">
+    <!--
+    id属性是语句的唯一标识
+    resyltType属性标记返回结果中单条结果的类型
+    -->
+<resultMap id="queryByDbidResultMap" type="auth">
+    <id column="dbid" property="dbid"/>
+    <collection property="children" column="dbid" ofType="auth" select="queryByDbid"/>
+</resultMap>
+ <select id="queryByDbid" parameterType="int" resultMap="queryByDbidResultMap">
+     SELECT *FROM auth WHERE parentId=#{dbid}
+ </select>
+    <update id="doUpdateAuth" parameterType="auth">
+    UPDATE  auth SET authName=#{authName},authCode=#{authCode},
+    authURL=#{authURL},type=#{type},parentId=#{parentId},orders=#{orders},valid=#{valid},
+    layer=#{layer} WHERE dbid=#{dbid}
+    </update>
+    <insert id="doInsertAuth" parameterType="auth">
+INSERT into auth(authName,authCode,
+authURL,type,parentId,orders,valid,
+layer) VALUES (#{authName},#{authCode},#{authURL},#{type},#{parentId},#{orders},#{valid},
+               #{layer})
+    </insert>
+    <select id="queryByRoleId" parameterType="int" resultType="int">
+        SELECT auth.dbid
+        FROM auth,role,role_auth
+        WHERE role_auth.roleId = role.dbid
+        AND role_auth.authId = auth.dbid
+        AND role.dbid = #{roleId}
+    </select>
+    <resultMap id="queryValidAuthResultMap" type="map">
+        <id column="id" property="id"/>
+        <collection property="children" ofType="map"
+                    select="queryValidAuth" column="id"/>
+    </resultMap>
+    <select id="queryValidAuth" parameterType="int" resultMap="queryValidAuthResultMap">
+        SELECT dbid id,authName text FROM auth WHERE parentId = #{id} AND valid = 1;
+    </select>
+    <select id="queryByUserId" parameterType="int" resultType="auth">
+        SELECT *,dbid id,authName text FROM auth WHERE layer!=0 AND type=1 AND dbid IN (
+        SELECT authId FROM role_auth WHERE roleId IN (
+        SELECT   roleId FROM  user_role WHERE userId=#{userId}
+            )
+)
+
+    </select>
+</mapper>
